@@ -109,7 +109,7 @@ static const rmt_item64_t symbols[8] = {
     {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*7)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*7) },
     {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*8)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*8) }
 };
-static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items, size_t size )
+static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items )
 {
     int packet_idx = 0;
     uint16_t data = 0;
@@ -182,7 +182,7 @@ static void mhi_rx_packet_task(void *p)
                     rx_items[i].t_h.level,rx_items[i].t_h.duration,
                     rx_items[i].t_end.level,rx_items[i].t_end.duration,
                     rx_items[i].t_l.duration+t_s.duration,rx_items[i].t_l.duration+t_s.duration+rx_items[i].t_h.duration+t_end.duration 
-                )
+                );
             }
         // ESP_LOGI(TAG, "all item converted %d byte ",cnt_byte);
         xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);
