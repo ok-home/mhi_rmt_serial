@@ -155,14 +155,26 @@ static void mhi_rx_packet_task(void *p)
     }
 }
 
-static void mhi_item_to_rmt_item_cvt(rmt_item16_t *rmt_data, mhi_item16_t data)
+static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_item16_t *data)
 {
+    int i=0;
+    uint8_t byte_3;
+    for(i=0;i<16;i++)
+    {
+        byte_3 = data[i].raw_data;
+        for(int j=0;j<3;j++)
+        {
+            rmt_data[i*3+j].raw_data = symbols[(byte_3 & 0x7)].raw_data;
+            byte_3 >>= 3;
+        }
+    }
+    rmt_data[16*3].raw_data = 0;
 }
 
-static rmt_symbol_word_t tx_items[(16*3*2)+2]; // 16*4 -> 64 bit ( with 00 end transfer )
+static rmt_item64_t tx_items[(16*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
 static void mhi_tx_packet_task(void *p)
 {
-    mhi_packet_t packet = {0};
+    mhi_packet_t packet;
     rmt_transmit_config_t rmt_tx_config = {
         .loop_count = 0,
     };
@@ -170,7 +182,7 @@ static void mhi_tx_packet_task(void *p)
     {
         xQueueReceive(mhi_tx_packet_queue, &packet, portMAX_DELAY);
         mhi_item_to_rmt_item_cvt(tx_items, &packet);
-        ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder, tx_item, 64, &rmt_tx_config));
+        ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder, (void*)tx_items, sizeof(tx_items), &rmt_tx_config));
         rmt_tx_wait_all_done(tx_chan_handle, portMAX_DELAY);
         xEventGroupSetBits(mhi_tx_event_group, mhi_TX_DONE_BIT);
     }
