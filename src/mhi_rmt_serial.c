@@ -121,7 +121,7 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
             int byte_3_duration = rx_rmt_items[i*3+j].t_l.duration + rx_rmt_items[i*3+j].t_s.duration;
             int byte_all_duration = byte_3_duration + rx_rmt_items[i*3+j].t_h.duration + rx_rmt_items[i*3+j].t_end.duration;
 
-            if(rx_rmt_items[i*3+j].t_l.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_s.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_h.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_end.duration < HBS_GLITCH)
+            if((rx_rmt_items[i*3+j].t_l.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_s.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_h.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_end.duration < HBS_GLITCH) && rx_rmt_items[i*3+j].t_end.duration !=0)
             {
                 ESP_LOGE(TAG,"error Glitch detected");
                 return;
@@ -131,16 +131,17 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
                 ESP_LOGE(TAG,"Byte_3 duration out of range %d",byte_3_duration);
                 return;
             }
-            if(byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA) )
+            if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA)) && byte_all_duration !=0)
             {
                 ESP_LOGE(TAG,"Byte_all duration out of range %d",byte_all_duration);
                 return;
             }
-            ESP_LOGI(TAG,"byte_3_duration = %d",byte_3_duration);
-            data |= (((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)&0x7)<<9;
+//            ESP_LOGI(TAG,"byte_3_duration = %d",byte_3_duration);
+            data |= ((((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)-1)&0x7)<<9;
             data >>=3;
         }
         rx_packet->raw_data[packet_idx] = (uint8_t) data & 0xff;
+//        ESP_LOGI(TAG,"idx =%d data = %x",packet_idx,data);
         data = 0;
         packet_idx++; 
     }
@@ -172,10 +173,11 @@ static void mhi_rx_packet_task(void *p)
         ESP_ERROR_CHECK(rmt_receive(rx_chan, rx_items, sizeof(rx_items), &receive_config));
         if (xQueueReceive(receive_queue, &rx_data, portMAX_DELAY) == pdTRUE)
         {
-            printf("cnt items = %d sizeof = %d \n",rx_data.num_symbols, sizeof(rx_items)/sizeof(rmt_item64_t));
+#if 0
+            //            printf("cnt items = %d sizeof = %d \n",rx_data.num_symbols, sizeof(rx_items)/sizeof(rmt_item64_t));
             for(int i=0;i<sizeof(rx_items)/sizeof(rmt_item64_t);i++)
             {
-#if 1                
+                
                 printf("cnt = %d lvl_l=%d dur_l=%d, lvl_s=%d dur_s=%d lvl_h=%d dur_h=%d lvl_end=%d dur_end=%d dur_byte=%d, dur_all=%d\n",
                     i,
                     rx_items[i].t_l.level,rx_items[i].t_l.duration,
@@ -184,8 +186,10 @@ static void mhi_rx_packet_task(void *p)
                     rx_items[i].t_end.level,rx_items[i].t_end.duration,
                     rx_items[i].t_l.duration+rx_items[i].t_s.duration,rx_items[i].t_l.duration+rx_items[i].t_s.duration+rx_items[i].t_h.duration+rx_items[i].t_end.duration 
                 );
-#endif
+
                 }
+#endif
+        rmt_item_to_mhi_packet_cvt(&packet, rx_items);
         // ESP_LOGI(TAG, "all item converted %d byte ",cnt_byte);
         xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);
         }

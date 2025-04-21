@@ -87,7 +87,9 @@ void app_main(void)
 #endif
 
 #endif
-   ESP_LOGI(TAG, "Size1 tx=%d", sizeof(tx_packet)/sizeof(uint8_t));
+   int cnt = 0;
+   int icnt = 0;
+   int err_cnt = 0;
 
     mhi_packet_t rx_packet = {0};
 
@@ -103,20 +105,18 @@ void app_main(void)
         gpio_set_level(TX_TEST_GPIO, 0);
 #endif
 
-#if 0
-    int cnt = 0;
-    int err_cnt = 0;
+#if 1
 
         for (int i = 0; i < sizeof(tx_packet); i++)
         {
-            if (tx_packet[i].raw_data != rx_packet[i].raw_data)
+            if (tx_packet.raw_data[i] != rx_packet.raw_data[i])
             {
-                ESP_LOGE(TAG, "ERROR Packet idx= %d tx %x rx %x err_cnt=%d", i, tx_packet.packet_data[i].data, rx_packet.packet_data[i].data, err_cnt++);
+                ESP_LOGE(TAG, "ERROR Packet idx= %d tx %x rx %x err_cnt=%d", i, tx_packet.raw_data[i], rx_packet.raw_data[i], err_cnt++);
             }
         }
         memset((void *)&rx_packet, 0, sizeof(rx_packet));
         cnt++;
-        if (cnt >= 10)
+        if (cnt >= 1)
         {
             ESP_LOGI(TAG, "Send/Receive %d packet icnt=%d", cnt, icnt++);
             cnt = 0;
