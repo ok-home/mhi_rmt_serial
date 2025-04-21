@@ -30,3 +30,9 @@ typedef struct
         uint8_t raw_data[16]; // Equivalent unsigned value for the mhi item 
     };
 } mhi_packet_t;
+
+esp_err_t mhi_init(gpio_num_t rx_pin, gpio_num_t tx_pin);   // init mhi/rmt task and queue
+esp_err_t mhi_deinit(void);                                 // deinit mhi/rmt task and queue
+void      mhi_tx_packet(mhi_packet_t *packet);              // send mhi packet ( return after all data transmitted )
+esp_err_t mhi_rx_packet(mhi_packet_t *packet, TickType_t wait_time); // receive mhi packet
+void      mhi_clear_rx_queue(void);                         // clear rx buffer
