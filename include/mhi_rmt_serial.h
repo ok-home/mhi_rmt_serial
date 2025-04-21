@@ -12,8 +12,8 @@ typedef struct
             uint8_t unknovn :1;         // 1-default, 0-not seen
 
             uint8_t fan_speed;          // 0x98 - level1, 0x99 - level2, 0x9a - level3, 0xaa - off
-            uint8_t target_temperature  // (input-0x80)/2 
-            uint8_t unknovn_temperature // ??
+            uint8_t target_temperature;  // (input-0x80)/2 
+            uint8_t unknovn_temperature; // ??
 
             uint8_t db7;
             uint8_t db8;

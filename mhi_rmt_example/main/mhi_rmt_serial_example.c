@@ -47,24 +47,24 @@ static const char *TAG = "RMT TEST";
 void app_main(void)
 {
     mhi_packet_t tx_packet =
-            {
-                {.raw_data = 0x23},
-                {.raw_data = 0x00},
-                {.raw_data = 0xff},
-                {.raw_data = 0xaa},
-                {.raw_data = 0x55},
-                {.raw_data = 0x1f},
-                {.raw_data = 0xf1},
-                {.raw_data = 0x0f},
-                {.raw_data = 0xf0},
-                {.raw_data = 0xbb},
-                {.raw_data = 0xcc},
-                {.raw_data = 0x01},
-                {.raw_data = 0x80},
-                {.raw_data = 0x03},
-                {.raw_data = 0xc0},
-                {.raw_data = 0x00},
-            };
+    {
+        .raw_data[0] = 0x00,
+        .raw_data[1] = 0x23,
+        .raw_data[2] = 0x23,
+        .raw_data[3] = 0x23,
+        .raw_data[4] = 0x23,
+        .raw_data[5] = 0x23,
+        .raw_data[6] = 0x23,
+        .raw_data[7] = 0x23,
+        .raw_data[8] = 0x23,
+        .raw_data[9] = 0x23,
+        .raw_data[10] = 0x23,
+        .raw_data[11] = 0x23,
+        .raw_data[12] = 0x23,
+        .raw_data[13] = 0x23,
+        .raw_data[14] = 0x23,
+        .raw_data[15] = 0x23,
+    };
 
 #if DBG
 
@@ -90,9 +90,6 @@ void app_main(void)
    ESP_LOGI(TAG, "Size1 tx=%d", sizeof(tx_packet)/sizeof(uint8_t));
 
     mhi_packet_t rx_packet = {0};
-    int cnt = 0;
-    int icnt = 0;
-    int err_cnt = 0;
 
     while (1)
     {
@@ -107,6 +104,9 @@ void app_main(void)
 #endif
 
 #if 0
+    int cnt = 0;
+    int err_cnt = 0;
+
         for (int i = 0; i < sizeof(tx_packet); i++)
         {
             if (tx_packet[i].raw_data != rx_packet[i].raw_data)

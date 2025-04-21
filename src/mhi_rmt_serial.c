@@ -98,17 +98,17 @@ typedef struct
 #define MHI_T_H (52)
 #define MHI_T_S (104)
 #define MHI_T_D (1248)
-
 static const rmt_item64_t symbols[8] = {
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*1)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*1) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*2)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*2) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*3)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*3) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*4)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*4) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*5)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*5) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*6)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*6) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*7)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*7) },
-    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*8)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*8) }
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*1)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*1) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*2)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*2) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*3)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*3) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*4)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*4) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*5)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*5) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*6)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*6) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*7)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*7) },
+    {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*8)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*8) }
 };
+
 static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items )
 {
     int packet_idx = 0;
@@ -137,10 +137,10 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
                 return;
             }
             ESP_LOGI(TAG,"byte_3_duration = %d",byte_3_duration);
-            data |= (((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)0x7)<<9;
+            data |= (((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)&0x7)<<9;
             data >>=3;
         }
-        rx_packet[packet_idx] = (uint8_t) data & 0xff;
+        rx_packet->raw_data[packet_idx] = (uint8_t) data & 0xff;
         data = 0;
         packet_idx++; 
     }
@@ -161,11 +161,10 @@ static bool rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done
 static void mhi_rx_packet_task(void *p)
 {
     rmt_rx_done_event_data_t rx_data;
-    size_t length = 0;
     mhi_packet_t packet = {};
 
     rmt_receive_config_t receive_config = {
-        .signal_range_min_ns = 25*1000,             // the shortest duration
+        .signal_range_min_ns = 3*1000,             // the shortest duration
         .signal_range_max_ns = RMT_RX_IDLE_THRES * 1000 // the longest duration
     };
     while (1)
@@ -176,34 +175,37 @@ static void mhi_rx_packet_task(void *p)
             printf("cnt items = %d sizeof = %d \n",rx_data.num_symbols, sizeof(rx_items)/sizeof(rmt_item64_t));
             for(int i=0;i<sizeof(rx_items)/sizeof(rmt_item64_t);i++)
             {
-                printf("lvl_l=%d dur_l=%d, lvl_s=%d dur_s=%d lvl_h=%d dur_h=%d lvl_end=%d dur_end=%d dur_byte=%d, dur_all=%d\n",
+#if 1                
+                printf("cnt = %d lvl_l=%d dur_l=%d, lvl_s=%d dur_s=%d lvl_h=%d dur_h=%d lvl_end=%d dur_end=%d dur_byte=%d, dur_all=%d\n",
+                    i,
                     rx_items[i].t_l.level,rx_items[i].t_l.duration,
                     rx_items[i].t_s.level,rx_items[i].t_s.duration,
                     rx_items[i].t_h.level,rx_items[i].t_h.duration,
                     rx_items[i].t_end.level,rx_items[i].t_end.duration,
-                    rx_items[i].t_l.duration+t_s.duration,rx_items[i].t_l.duration+t_s.duration+rx_items[i].t_h.duration+t_end.duration 
+                    rx_items[i].t_l.duration+rx_items[i].t_s.duration,rx_items[i].t_l.duration+rx_items[i].t_s.duration+rx_items[i].t_h.duration+rx_items[i].t_end.duration 
                 );
-            }
+#endif
+                }
         // ESP_LOGI(TAG, "all item converted %d byte ",cnt_byte);
         xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);
         }
     }
 }
 
-static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_item16_t *data)
+static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_packet_t *data)
 {
     int i=0;
     uint8_t byte_3;
     for(i=0;i<16;i++)
     {
-        byte_3 = data[i].raw_data;
+        byte_3 = data->raw_data[i];
         for(int j=0;j<3;j++)
         {
-            rmt_data[i*3+j].raw_data = symbols[(byte_3 & 0x7)].raw_data;
+            rmt_data[i*3+j].val = symbols[(byte_3 & 0x7)].val;
             byte_3 >>= 3;
         }
     }
-    rmt_data[16*3].raw_data = 0;
+    rmt_data[16*3].val = 0;
 }
 
 static rmt_item64_t tx_items[(16*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
@@ -219,7 +221,7 @@ static void mhi_tx_packet_task(void *p)
         mhi_item_to_rmt_item_cvt(tx_items, &packet);
         ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder, (void*)tx_items, sizeof(tx_items), &rmt_tx_config));
         rmt_tx_wait_all_done(tx_chan_handle, portMAX_DELAY);
-        xEventGroupSetBits(mhi_tx_event_group, mhi_TX_DONE_BIT);
+        xEventGroupSetBits(mhi_tx_event_group, MHI_TX_DONE_BIT);
     }
 }
 
@@ -295,7 +297,7 @@ esp_err_t mhi_deinit(void)
 void mhi_tx_packet(mhi_packet_t *packet)
 {
     xQueueSend(mhi_tx_packet_queue, packet, portMAX_DELAY);                                   // data send to tx queue, start transmit
-    xEventGroupWaitBits(mhi_tx_event_group, mhi_TX_DONE_BIT, pdTRUE, pdFALSE, portMAX_DELAY); // all data transmitted
+    xEventGroupWaitBits(mhi_tx_event_group, MHI_TX_DONE_BIT, pdTRUE, pdFALSE, portMAX_DELAY); // all data transmitted
 }
 esp_err_t mhi_rx_packet(mhi_packet_t *packet, TickType_t wait_time)
 {
