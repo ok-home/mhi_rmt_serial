@@ -36,6 +36,8 @@ static const char *TAG = "MHI_RMT";
 #define RMT_RX_CLK_OUT (80 * 1000 * 1000 / RMT_RX_DIV) // 1 mks
 #define RMT_RX_DELTA (20)
 #define RX_INVERT_LVL 0
+#define HBS_GLITCH 5
+
 
 #if CONFIG_IDF_TARGET_ESP32C3
 #define RX_BLOCK_SYMBOL (48*2) 
@@ -111,7 +113,43 @@ static const rmt_item64_t symbols[8] = {
     {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*7)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*7) },
     {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*8)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*8) }
 };
+static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items, size_t size )
+{
+    int packet_idx = 0;
+    uint16_t data = 0;
+    for(int i = 0; i < 16; i++ )
+    {
+        data = 0;
+        for(int j = 0;j<3;j++)
+        {
+            int byte_3_duration = rx_rmt_items[i*3+j].t_l.duration + rx_rmt_items[i*3+j].t_s.duration;
+            int byte_all_duration = byte_3_duration + rx_rmt_items[i*3+j].t_h.duration + rx_rmt_items[i*3+j].t_end.duration;
 
+            if(rx_rmt_items[i*3+j].t_l.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_s.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_h.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_end.duration < HBS_GLITCH)
+            {
+                ESP_LOGE(TAG,"error Glitch detected");
+                return;
+            }
+            if(byte_3_duration > (MHL_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHL_T_S-RMT_RX_DELTA) )
+            {
+                ESP_LOGE(TAG,"Byte_3 duration out of range %d",byte_3_duration);
+                return;
+            }
+            if(byte_all_duration > (MHL_T_D + RMT_RX_DELTA) || byte_all_duration < (MHL_T_S-RMT_RX_DELTA) )
+            {
+                ESP_LOGE(TAG,"Byte_all duration out of range %d",byte_all_duration);
+                return;
+            }
+            data |= (((byte_3_duration+RMT_RX_DELTA)/MHL_T_S)<<9);
+            data >>=3;
+        }
+        rx_packet[packet_idx] = (uint8_t) data & 0xff;
+        data = 0;
+        packet_idx++; 
+    }
+    return;
+
+}
 static rmt_item64_t rx_items[16*3] = {0};
 static bool rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {

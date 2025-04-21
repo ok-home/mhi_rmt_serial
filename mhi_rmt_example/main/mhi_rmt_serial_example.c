@@ -40,50 +40,33 @@
 #define TX_TEST_GPIO (25)//for c3 !! esp32->(25)
 #endif
 
-
-
-
-
 static const char *TAG = "RMT TEST";
 
+// dbg logic analyzer
+#include "logic_analyzer_ws_server.h"
 void app_main(void)
 {
     mhi_packet_t tx_packet =
-    {
-        .packet_hdr.packet_size = 26,
-        .packet_data =
             {
-                {.parity = 1, .data = 0x00},
-                {.parity = 0, .data = 0x00},
-                {.parity = 0, .data = 0x10},
-                {.parity = 0, .data = 0xff},
-                {.parity = 1, .data = 0xff},
-                {.parity = 0, .data = 0x00},
-                {.parity = 0, .data = 0x0f},
-                {.parity = 0, .data = 0xf0},
-                {.parity = 0, .data = 0x30},
-                {.parity = 0, .data = 0x03},
-                {.parity = 0, .data = 0xe0},
-                {.parity = 0, .data = 0x0e},
-                {.parity = 1, .data = 0xc0},
-                {.parity = 0, .data = 0x0c},
-                {.parity = 1, .data = 0xcc},
-                {.parity = 0, .data = 0xbb},
-                {.parity = 0, .data = 0x33},
-                {.parity = 1, .data = 0x77},
-                {.parity = 0, .data = 0x88},
-                {.parity = 0, .data = 0x11},
-                {.parity = 1, .data = 0x00},
-                {.parity = 1, .data = 0x00},
-                {.parity = 1, .data = 0x00},
-                {.parity = 1, .data = 0x00},
-                {.parity = 1, .data = 0xff},
-                {.parity = 1, .data = 0x00},
-            }};
+                {.raw_data = 0x23},
+                {.raw_data = 0x00},
+                {.raw_data = 0xff},
+                {.raw_data = 0xaa},
+                {.raw_data = 0x55},
+                {.raw_data = 0x1f},
+                {.raw_data = 0xf1},
+                {.raw_data = 0x0f},
+                {.raw_data = 0xf0},
+                {.raw_data = 0xbb},
+                {.raw_data = 0xcc},
+                {.raw_data = 0x01},
+                {.raw_data = 0x80},
+                {.raw_data = 0x03},
+                {.raw_data = 0xc0},
+                {.raw_data = 0x00},
+            };
 
 #if DBG
-// dbg logic analyzer
-#include "logic_analyzer_ws_server.h"
 
     logic_analyzer_ws_server();
     //
@@ -100,11 +83,11 @@ void app_main(void)
     gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN0_IDX, false);//esp32->RMT_SIG_IN1_IDX
 #endif
 #if CONFIG_IDF_TARGET_ESP32
-    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN1_IDX, false);//esp32->RMT_SIG_IN1_IDX
+    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN2_IDX, false);//esp32->RMT_SIG_IN2_IDX
 #endif
 
 #endif
-   ESP_LOGI(TAG, "Size1 tx=%d", tx_packet.packet_hdr.packet_size);
+   ESP_LOGI(TAG, "Size1 tx=%d", sizeof(tx_packet)/sizeof(uint8_t));
 
     mhi_packet_t rx_packet = {0};
     int cnt = 0;
@@ -113,7 +96,7 @@ void app_main(void)
 
     while (1)
     {
-        vTaskDelay(1);
+        vTaskDelay(200);
 #if DBG
         gpio_set_level(TX_TEST_GPIO, 1);
 #endif
@@ -123,12 +106,10 @@ void app_main(void)
         gpio_set_level(TX_TEST_GPIO, 0);
 #endif
 
-#if 1
-        if (tx_packet.packet_hdr.packet_size != rx_packet.packet_hdr.packet_size)
-            ESP_LOGE(TAG, "ERROR Size tx=%d rx=%d", tx_packet.packet_hdr.packet_size, rx_packet.packet_hdr.packet_size);
-        for (int i = 0; i < tx_packet.packet_hdr.packet_size; i++)
+#if 0
+        for (int i = 0; i < sizeof(tx_packet); i++)
         {
-            if (tx_packet.packet_data[i].data != rx_packet.packet_data[i].data)
+            if (tx_packet[i].raw_data != rx_packet[i].raw_data)
             {
                 ESP_LOGE(TAG, "ERROR Packet idx= %d tx %x rx %x err_cnt=%d", i, tx_packet.packet_data[i].data, rx_packet.packet_data[i].data, err_cnt++);
             }
