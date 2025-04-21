@@ -30,12 +30,10 @@ static const char *TAG = "MHI_RMT";
  * Divider set
  */
 
-#define RX_CHANNEL RMT_CHANNEL_1
 #define RMT_RX_DIV (80) // 8
 #define RMT_RX_IDLE_THRES (20*1000) // 
 #define RMT_RX_CLK_OUT (80 * 1000 * 1000 / RMT_RX_DIV) // 1 mks
 #define RMT_RX_DELTA (20)
-#define RX_INVERT_LVL 0
 #define HBS_GLITCH 5
 
 
@@ -49,8 +47,6 @@ static const char *TAG = "MHI_RMT";
 #define TX_BLOCK_SYMBOL (64*2)
 #endif
 
-
-#define TX_CHANNEL RMT_CHANNEL_0
 
 #define RMT_TX_DIV (80) // 8 // 1 mks
 #define RMT_TX_CLK_OUT (80 * 1000 * 1000 / RMT_TX_DIV) // 1 mks
@@ -98,20 +94,20 @@ typedef struct
     };
 } rmt_item64_t;
 
-#define MHL_T_L (52)
-#define MHL_T_H (52)
-#define MHL_T_S (104)
-#define MHL_T_D (1248)
+#define MHI_T_L (52)
+#define MHI_T_H (52)
+#define MHI_T_S (104)
+#define MHI_T_D (1248)
 
 static const rmt_item64_t symbols[8] = {
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*1)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*1) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*2)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*2) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*3)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*3) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*4)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*4) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*5)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*5) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*6)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*6) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*7)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*7) },
-    {.t_l.level = 0, .t_l.duration = MHL_T_L, .t_s.level = 1, (MHL_T_S*8)-MHL_T_L, .t_h.level = 0, .t_h.duration = MHL_T_H, .t_end.level = 1, .t_end.duration = MHL_T_D-MHL_T_L-MHL_T_H-(MHL_T_S*8) }
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*1)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*1) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*2)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*2) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*3)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*3) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*4)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*4) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*5)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*5) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*6)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*6) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*7)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*7) },
+    {.t_l.level = 0, .t_l.duration = MHI_T_L, .t_s.level = 1, (MHI_T_S*8)-MHI_T_L, .t_h.level = 0, .t_h.duration = MHI_T_H, .t_end.level = 1, .t_end.duration = MHI_T_D-MHI_T_L-MHI_T_H-(MHI_T_S*8) }
 };
 static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items, size_t size )
 {
@@ -130,17 +126,18 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
                 ESP_LOGE(TAG,"error Glitch detected");
                 return;
             }
-            if(byte_3_duration > (MHL_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHL_T_S-RMT_RX_DELTA) )
+            if(byte_3_duration > (MHI_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHI_T_S-RMT_RX_DELTA) )
             {
                 ESP_LOGE(TAG,"Byte_3 duration out of range %d",byte_3_duration);
                 return;
             }
-            if(byte_all_duration > (MHL_T_D + RMT_RX_DELTA) || byte_all_duration < (MHL_T_S-RMT_RX_DELTA) )
+            if(byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA) )
             {
                 ESP_LOGE(TAG,"Byte_all duration out of range %d",byte_all_duration);
                 return;
             }
-            data |= (((byte_3_duration+RMT_RX_DELTA)/MHL_T_S)<<9);
+            ESP_LOGI(TAG,"byte_3_duration = %d",byte_3_duration);
+            data |= (((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)0x7)<<9;
             data >>=3;
         }
         rx_packet[packet_idx] = (uint8_t) data & 0xff;
