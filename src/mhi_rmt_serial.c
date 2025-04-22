@@ -189,6 +189,8 @@ static void mhi_rx_packet_task(void *p)
 
                 }
 #endif
+        if(rx_data.num_symbols != 96)
+            {ESP_LOGE(TAG,"ERROR: rx_data.num_symbols != 96 %d",rx_data.num_symbols);}
         rmt_item_to_mhi_packet_cvt(&packet, rx_items);
         // ESP_LOGI(TAG, "all item converted %d byte ",cnt_byte);
         xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);
