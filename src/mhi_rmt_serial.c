@@ -123,7 +123,7 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
 
             if((rx_rmt_items[i*3+j].t_l.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_s.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_h.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_end.duration < HBS_GLITCH) && rx_rmt_items[i*3+j].t_end.duration !=0)
             {
-                ESP_LOGE(TAG,"error Glitch detected");
+                ESP_LOGE(TAG,"error Glitch detected t_l=%d t_s=%d t_h=%d t_end=%d",rx_rmt_items[i*3+j].t_l.duration,rx_rmt_items[i*3+j].t_s.duration,rx_rmt_items[i*3+j].t_h.duration,rx_rmt_items[i*3+j].t_end.duration);
                 return;
             }
             if(byte_3_duration > (MHI_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHI_T_S-RMT_RX_DELTA) )
