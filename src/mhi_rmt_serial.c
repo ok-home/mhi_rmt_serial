@@ -148,7 +148,7 @@ static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx
     return;
 
 }
-static rmt_item64_t rx_items[16*3] = {0};
+static rmt_item64_t rx_items[16*4] = {0};
 static bool rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {
     BaseType_t high_task_wakeup = pdFALSE;
