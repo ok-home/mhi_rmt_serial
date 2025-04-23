@@ -31,10 +31,10 @@ static const char *TAG = "MHI_RMT";
  */
 
 #define RMT_RX_DIV (80) // 8
-#define RMT_RX_IDLE_THRES (20*1000) // 
+#define RMT_RX_IDLE_THRES (5*1000) // 
 #define RMT_RX_CLK_OUT (80 * 1000 * 1000 / RMT_RX_DIV) // 1 mks
 #define RMT_RX_DELTA (20)
-#define HBS_GLITCH 5
+#define HBS_GLITCH 6
 
 
 #if CONFIG_IDF_TARGET_ESP32C3
@@ -44,7 +44,7 @@ static const char *TAG = "MHI_RMT";
 
 #if CONFIG_IDF_TARGET_ESP32
 #define RX_BLOCK_SYMBOL (64*2)
-#define TX_BLOCK_SYMBOL (64*2)
+#define TX_BLOCK_SYMBOL (64*6)
 #endif
 
 
@@ -109,47 +109,59 @@ static const rmt_item64_t symbols[8] = {
     {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*8)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*8) }
 };
 
-static void rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_item64_t *rx_rmt_items )
+static esp_er_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_rx_done_event_data_t *rx_edata )
 {
     int packet_idx = 0;
-    uint16_t data = 0;
-    for(int i = 0; i < 16; i++ )
-    {
-        data = 0;
-        for(int j = 0;j<3;j++)
-        {
-            int byte_3_duration = rx_rmt_items[i*3+j].t_l.duration + rx_rmt_items[i*3+j].t_s.duration;
-            int byte_all_duration = byte_3_duration + rx_rmt_items[i*3+j].t_h.duration + rx_rmt_items[i*3+j].t_end.duration;
+    size_t rmt_size = (rx_edata->num_symbols) * 2;
+    rmt_item16_t *rmt_data = (rmt_item16_t *)rx_edata->symbols;
+    uint16_t byte1_durations[4] = {0}; //idx->  0-t_l, 1-t_s, 2-t_h, 3-tend
 
-            if((rx_rmt_items[i*3+j].t_l.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_s.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_h.duration < HBS_GLITCH || rx_rmt_items[i*3+j].t_end.duration < HBS_GLITCH) && rx_rmt_items[i*3+j].t_end.duration !=0)
+    for(int rmt_idx = 0; rmt_idx < rmt_size;)
+    {
+        uint16_t data = 0;
+        for(int b3_idx = 0;b3_idx<3;b3_idx++)
+        {
+            for(int b1_idx=0;b1_idx<4;b1++) // read b1 durations -> t_l t_s t_h t_end
             {
-                ESP_LOGE(TAG,"error Glitch detected t_l=%d t_s=%d t_h=%d t_end=%d",rx_rmt_items[i*3+j].t_l.duration,rx_rmt_items[i*3+j].t_s.duration,rx_rmt_items[i*3+j].t_h.duration,rx_rmt_items[i*3+j].t_end.duration);
-                return;
+                uint16_t filtered_duration = rmt_data[rmt_idx].duration;
+                rmt_idx++;
+                if (rmt_data[rmt_idx].duration < HBS_GLITCH ) // next symbol glitch -> attension filter only on glitch in pulse !!
+                {
+                    filtered_duration = filtered_duration + rmt_data[rmt_idx].duration + rmt_data[rmt_idx+1].duration; // add glitch duration + next duration
+                    rmt_idx += 2;
+                }
+                byte1_durations[b1_idx] = filtered_duration;
             }
+            uint16_t byte_3_duration = byte1_durations[0]+byte1_durations[1];
+            uint16_t byte_all_duration = byte_3_duration+byte1_durations[2]+byte1_durations[3];
+
             if(byte_3_duration > (MHI_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHI_T_S-RMT_RX_DELTA) )
             {
                 ESP_LOGE(TAG,"Byte_3 duration out of range %d",byte_3_duration);
-                return;
+                return ESP_ERR;
             }
             if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA)) && byte_all_duration !=0)
             {
                 ESP_LOGE(TAG,"Byte_all duration out of range %d",byte_all_duration);
-                return;
+                return ESP_ERR;
             }
-//            ESP_LOGI(TAG,"byte_3_duration = %d",byte_3_duration);
+
             data |= ((((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)-1)&0x7)<<9;
             data >>=3;
         }
         rx_packet->raw_data[packet_idx] = (uint8_t) data & 0xff;
-//        ESP_LOGI(TAG,"idx =%d data = %x",packet_idx,data);
-        data = 0;
-        packet_idx++; 
+        packet_idx++;
+        if(packet_idx > sizeof(mhi_packet_t))
+        {
+            ESP_LOGE(TAG,"ERROR Packet overflow");
+            return ESP_ERR;
+        }
     }
-    return;
+    return ESP_OK;
 
 }
-static rmt_item64_t rx_items[16*4] = {0};
-static bool rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
+static rmt_item16_t rx_items[TX_BLOCK_SYMBOL*2] = {0}; // max rx buffer for glith detection
+static bool IRAM_ATTR rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {
     BaseType_t high_task_wakeup = pdFALSE;
     QueueHandle_t receive_queue = (QueueHandle_t)user_data;
@@ -161,7 +173,7 @@ static bool rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done
 
 static void mhi_rx_packet_task(void *p)
 {
-    rmt_rx_done_event_data_t rx_data;
+    rmt_rx_done_event_data_t rx_edata;
     mhi_packet_t packet = {};
 
     rmt_receive_config_t receive_config = {
@@ -171,29 +183,14 @@ static void mhi_rx_packet_task(void *p)
     while (1)
     {
         ESP_ERROR_CHECK(rmt_receive(rx_chan, rx_items, sizeof(rx_items), &receive_config));
-        if (xQueueReceive(receive_queue, &rx_data, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
-#if 0
-            //            printf("cnt items = %d sizeof = %d \n",rx_data.num_symbols, sizeof(rx_items)/sizeof(rmt_item64_t));
-            for(int i=0;i<sizeof(rx_items)/sizeof(rmt_item64_t);i++)
-            {
-                
-                printf("cnt = %d lvl_l=%d dur_l=%d, lvl_s=%d dur_s=%d lvl_h=%d dur_h=%d lvl_end=%d dur_end=%d dur_byte=%d, dur_all=%d\n",
-                    i,
-                    rx_items[i].t_l.level,rx_items[i].t_l.duration,
-                    rx_items[i].t_s.level,rx_items[i].t_s.duration,
-                    rx_items[i].t_h.level,rx_items[i].t_h.duration,
-                    rx_items[i].t_end.level,rx_items[i].t_end.duration,
-                    rx_items[i].t_l.duration+rx_items[i].t_s.duration,rx_items[i].t_l.duration+rx_items[i].t_s.duration+rx_items[i].t_h.duration+rx_items[i].t_end.duration 
-                );
-
-                }
-#endif
+        if(rx_data.num_symbols >= TX_BLOCK_SYMBOL-4)
+            {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,TX_BLOCK_SYMBOL-4 ); continue;}
         if(rx_data.num_symbols != 96)
-            {ESP_LOGE(TAG,"ERROR: rx_data.num_symbols != 96 %d",rx_data.num_symbols);}
-        rmt_item_to_mhi_packet_cvt(&packet, rx_items);
-        // ESP_LOGI(TAG, "all item converted %d byte ",cnt_byte);
-        xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);
+            {ESP_LOGW(TAG,"Warning: reseived symbols != 96 %d continue with glitch filter",rx_edata.num_symbols);}
+        if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
+            {xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);}
         }
     }
 }
