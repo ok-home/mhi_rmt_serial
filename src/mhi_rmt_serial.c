@@ -26,6 +26,7 @@
 
 static const char *TAG = "MHI_RMT";
 
+//#define GLITCH_DEBUG 
 /*
  * Divider set
  */
@@ -46,6 +47,7 @@ static const char *TAG = "MHI_RMT";
 #define RX_BLOCK_SYMBOL (64*6)
 #define TX_BLOCK_SYMBOL (64*2)
 #endif
+
 
 
 #define RMT_TX_DIV (80) // 8 // 1 mks
@@ -109,6 +111,7 @@ static const rmt_item64_t symbols[8] = {
     {.t_l.level = 1, .t_l.duration = MHI_T_L, .t_s.level = 0, .t_s.duration = (MHI_T_S*8)-MHI_T_L, .t_h.level = 1, .t_h.duration = MHI_T_H, .t_end.level = 0, .t_end.duration = MHI_T_D-MHI_T_H-(MHI_T_S*8) }
 };
 
+
 static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_rx_done_event_data_t *rx_edata )
 {
     int packet_idx = 0;
@@ -160,7 +163,7 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_rx_done
     return ESP_OK;
 
 }
-static rmt_item16_t rx_items[TX_BLOCK_SYMBOL*2] = {0}; // max rx buffer for glith detection
+static rmt_item16_t rx_items[RX_BLOCK_SYMBOL*2] = {0}; // max rx buffer for glith detection
 static bool IRAM_ATTR rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {
     BaseType_t high_task_wakeup = pdFALSE;
@@ -185,7 +188,7 @@ static void mhi_rx_packet_task(void *p)
         ESP_ERROR_CHECK(rmt_receive(rx_chan, rx_items, sizeof(rx_items), &receive_config));
         if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
-        if(rx_edata.num_symbols >= TX_BLOCK_SYMBOL-4)
+        if(rx_edata.num_symbols >= RX_BLOCK_SYMBOL-4)
             {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,TX_BLOCK_SYMBOL-4 ); continue;}
         if(rx_edata.num_symbols != 96)
             {ESP_LOGW(TAG,"Warning: reseived symbols != 96 %d continue with glitch filter",rx_edata.num_symbols);}
@@ -195,6 +198,36 @@ static void mhi_rx_packet_task(void *p)
     }
 }
 
+#ifdef GLITCH_DEBUG
+static rmt_item64_t tx_items[(16*4)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
+static void mhi_item_to_rmt_item_cvt_glitch(rmt_item64_t *rmt_data, mhi_packet_t *data)
+{
+    int i=0;
+    uint8_t byte_3;
+    for(i=0;i<16;i++)
+    {
+        byte_3 = data->raw_data[i];
+        for(int j=0;j<4;j++)
+        {
+            if(j<3){
+            rmt_data[i*4+j].val = symbols[(byte_3 & 0x7)].val;
+            byte_3 >>= 3;
+            }else{
+                rmt_data[i*4+j].t_l.level = 1;
+                rmt_data[i*4+j].t_l.duration = 2;
+                rmt_data[i*4+j].t_s.level = 1;
+                rmt_data[i*4+j].t_s.duration = 2;
+                rmt_data[i*4+j].t_h.level = 0;
+                rmt_data[i*4+j].t_h.duration = 2;
+                rmt_data[i*4+j].t_end.level = 0;
+                rmt_data[i*4+j].t_end.duration = 2;
+            }
+        }
+    }
+    rmt_data[16*4].val = 0;
+}
+#else
+static rmt_item64_t tx_items[(16*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
 static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_packet_t *data)
 {
     int i=0;
@@ -210,8 +243,8 @@ static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_packet_t *data)
     }
     rmt_data[16*3].val = 0;
 }
+#endif
 
-static rmt_item64_t tx_items[(16*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
 static void mhi_tx_packet_task(void *p)
 {
     mhi_packet_t packet;
@@ -221,7 +254,11 @@ static void mhi_tx_packet_task(void *p)
     while (1)
     {
         xQueueReceive(mhi_tx_packet_queue, &packet, portMAX_DELAY);
+#ifdef GLITCH_DEBUG
+        mhi_item_to_rmt_item_cvt_glitch(tx_items, &packet);
+#else
         mhi_item_to_rmt_item_cvt(tx_items, &packet);
+#endif
         ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder, (void*)tx_items, sizeof(tx_items), &rmt_tx_config));
         rmt_tx_wait_all_done(tx_chan_handle, portMAX_DELAY);
         xEventGroupSetBits(mhi_tx_event_group, MHI_TX_DONE_BIT);

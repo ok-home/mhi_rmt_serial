@@ -49,7 +49,7 @@ void app_main(void)
     mhi_packet_t tx_packet =
     {
         .raw_data[0] = 0x00,
-        .raw_data[1] = 0x23,
+        .raw_data[1] = 0x00,
         .raw_data[2] = 0x23,
         .raw_data[3] = 0x23,
         .raw_data[4] = 0x23,
