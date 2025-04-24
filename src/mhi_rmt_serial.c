@@ -194,7 +194,7 @@ static void mhi_rx_packet_task(void *p)
             {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(mhi_packet_t)*3*2,rx_edata.num_symbols);}
         if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
             {
-                if(xQueueSend(mhi_rx_packet_queue, &packet, 200/portTICK_PERIOD_MS) != pdPASS) {
+                if(xQueueSend(mhi_rx_packet_queue, &packet, 5000/portTICK_PERIOD_MS) != pdPASS) {
                     ESP_LOGE(TAG,"ERROR: mhi_rx_packet_queue full" );
                 }
             }
