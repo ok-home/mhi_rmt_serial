@@ -35,7 +35,7 @@ static const char *TAG = "MHI_RMT";
 #define RMT_RX_IDLE_THRES (5*1000) // 
 #define RMT_RX_CLK_OUT (80 * 1000 * 1000 / RMT_RX_DIV) // 1 mks
 #define RMT_RX_DELTA (20)
-#define HBS_GLITCH 6
+#define HBS_GLITCH 10
 
 
 #if CONFIG_IDF_TARGET_ESP32C3
@@ -140,12 +140,12 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_rx_done
 
             if(byte_3_duration > (MHI_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHI_T_S-RMT_RX_DELTA) )
             {
-                ESP_LOGE(TAG,"Byte_3 duration out of range %d",byte_3_duration);
+                ESP_LOGE(TAG,"ERROR: Symbol encoding duration out of range %d",byte_3_duration);
                 return ESP_FAIL;
             }
             if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA)) && byte_all_duration !=0)
             {
-                ESP_LOGE(TAG,"Byte_all duration out of range %d",byte_all_duration);
+                ESP_LOGE(TAG,"ERROR: Symbol distance duration out of range %d",byte_all_duration);
                 return ESP_FAIL;
             }
 
@@ -156,7 +156,7 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, rmt_rx_done
         packet_idx++;
         if(packet_idx > sizeof(mhi_packet_t))
         {
-            ESP_LOGE(TAG,"ERROR Packet overflow");
+            ESP_LOGE(TAG,"ERROR: Packet overflow");
             return ESP_FAIL;
         }
     }
