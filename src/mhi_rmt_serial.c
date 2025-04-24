@@ -189,9 +189,9 @@ static void mhi_rx_packet_task(void *p)
         if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
         if(rx_edata.num_symbols >= RX_BLOCK_SYMBOL-4)
-            {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,TX_BLOCK_SYMBOL-4 ); continue;}
+            {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,RX_BLOCK_SYMBOL-4 ); continue;}
         if(rx_edata.num_symbols != 96)
-            {ESP_LOGW(TAG,"Warning: reseived symbols != 96 %d continue with glitch filter",rx_edata.num_symbols);}
+            {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(mhi_packet_t)*3*2,rx_edata.num_symbols);}
         if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
             {xQueueSend(mhi_rx_packet_queue, &packet, portMAX_DELAY);}
         }
@@ -199,12 +199,12 @@ static void mhi_rx_packet_task(void *p)
 }
 
 #ifdef GLITCH_DEBUG
-static rmt_item64_t tx_items[(16*4)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
+static rmt_item64_t tx_items[(sizeof(mhi_packet_t)*4)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
 static void mhi_item_to_rmt_item_cvt_glitch(rmt_item64_t *rmt_data, mhi_packet_t *data)
 {
     int i=0;
     uint8_t byte_3;
-    for(i=0;i<16;i++)
+    for(i=0;i<sizeof(mhi_packet_t);i++)
     {
         byte_3 = data->raw_data[i];
         for(int j=0;j<4;j++)
@@ -224,15 +224,15 @@ static void mhi_item_to_rmt_item_cvt_glitch(rmt_item64_t *rmt_data, mhi_packet_t
             }
         }
     }
-    rmt_data[16*4].val = 0;
+    rmt_data[sizeof(mhi_packet_t)*4].val = 0;
 }
 #else
-static rmt_item64_t tx_items[(16*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
+static rmt_item64_t tx_items[(sizeof(mhi_packet_t)*3)+1]; // 16*4 -> 64 bit ( with 00 end transfer )
 static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_packet_t *data)
 {
     int i=0;
     uint8_t byte_3;
-    for(i=0;i<16;i++)
+    for(i=0;i<sizeof(mhi_packet_t);i++)
     {
         byte_3 = data->raw_data[i];
         for(int j=0;j<3;j++)
@@ -241,7 +241,7 @@ static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, mhi_packet_t *data)
             byte_3 >>= 3;
         }
     }
-    rmt_data[16*3].val = 0;
+    rmt_data[sizeof(mhi_packet_t)*3].val = 0;
 }
 #endif
 
