@@ -29,11 +29,6 @@
 
 #define DBG 1
 
-#if CONFIG_IDF_TARGET_ESP32C3
-#define RMT_TX_GPIO (3)//esp32 ->(23)
-#define RMT_RX_GPIO (4)//esp32 ->(22)
-#define TX_TEST_GPIO (5)//for c3 !! esp32->(25)
-#endif
 #if CONFIG_IDF_TARGET_ESP32
 #define RMT_TX_GPIO (23)//esp32 ->(23)
 #define RMT_RX_GPIO (22)//esp32 ->(22)
@@ -59,11 +54,11 @@ void app_main(void)
         .raw_data[8] = 0x23,
         .raw_data[9] = 0x23,
         .raw_data[10] = 0x23,
-        .raw_data[11] = 0x23,
-        .raw_data[12] = 0x23,
-        .raw_data[13] = 0x23,
-        .raw_data[14] = 0x23,
-        .raw_data[15] = 0x23,
+        .raw_data[11] = 0xaa,
+        .raw_data[12] = 0x55,
+        .raw_data[13] = 0xfa,
+        .raw_data[14] = 0xaf,
+        .raw_data[15] = 0xff,
     };
 
 #if DBG
@@ -79,9 +74,6 @@ void app_main(void)
 #if DBG
     // connect rx & tx pins without wires -> test only
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[RMT_TX_GPIO]);
-#if CONFIG_IDF_TARGET_ESP32C3
-    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN0_IDX, false);//esp32->RMT_SIG_IN1_IDX
-#endif
 #if CONFIG_IDF_TARGET_ESP32
     gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN2_IDX, false);//esp32->RMT_SIG_IN2_IDX
 #endif
@@ -95,7 +87,7 @@ void app_main(void)
 
     while (1)
     {
-        vTaskDelay(200);
+        vTaskDelay(20);
 #if DBG
         gpio_set_level(TX_TEST_GPIO, 1);
 #endif
@@ -116,7 +108,7 @@ void app_main(void)
         }
         memset((void *)&rx_packet, 0, sizeof(rx_packet));
         cnt++;
-        if (cnt >= 1)
+        if (cnt >= 10)
         {
             ESP_LOGI(TAG, "Send/Receive %d packet icnt=%d", cnt, icnt++);
             cnt = 0;
