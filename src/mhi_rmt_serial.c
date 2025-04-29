@@ -139,7 +139,7 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
                 ESP_LOGE(TAG,"ERROR: Symbol encoding duration out of range %d",byte_3_duration);
                 return ESP_FAIL;
             }
-            if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_S-RMT_RX_DELTA)) && byte_all_duration !=0)
+            if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_D-RMT_RX_DELTA)) && byte_all_duration !=0)
             {
                 ESP_LOGE(TAG,"ERROR: Symbol distance duration out of range %d",byte_all_duration);
                 return ESP_FAIL;
@@ -191,7 +191,7 @@ static void mhi_rx_packet_task(void *p)
             {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(mhi_packet_t)*3*2,rx_edata.num_symbols);}
         if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
             {
-                if(xQueueSend(mhi_rx_packet_queue, &packet, 5000/portTICK_PERIOD_MS) != pdPASS) {
+                if(xQueueSend(mhi_rx_packet_queue, &packet,0 /*5000/portTICK_PERIOD_MS*/) != pdPASS) { // wait time = 0 for debug
                     ESP_LOGE(TAG,"ERROR: mhi_rx_packet_queue full" );
                 }
             }
