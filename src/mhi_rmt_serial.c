@@ -139,12 +139,13 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
                 ESP_LOGE(TAG,"ERROR: Symbol encoding duration out of range %d",byte_3_duration);
                 return ESP_FAIL;
             }
+/*            
             if((byte_all_duration > (MHI_T_D + RMT_RX_DELTA) || byte_all_duration < (MHI_T_D-RMT_RX_DELTA)) && byte_all_duration !=0)
             {
                 ESP_LOGE(TAG,"ERROR: Symbol distance duration out of range %d",byte_all_duration);
                 return ESP_FAIL;
             }
-
+*/
             data |= ((((byte_3_duration+RMT_RX_DELTA)/MHI_T_S)-1)&0x7)<<9;
             data >>=3;
         }
