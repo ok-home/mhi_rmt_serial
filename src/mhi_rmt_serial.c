@@ -132,11 +132,11 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
                 byte1_durations[b1_idx] = filtered_duration;
             }
             uint16_t byte_3_duration = byte1_durations[0]+byte1_durations[1]; //symbol duration 0 = 104, 7 = 104*8
-            uint16_t byte_all_duration = byte_3_duration+byte1_durations[2]+byte1_durations[3]; // symbol distanse duration, default 1248 mks
+//            uint16_t byte_all_duration = byte_3_duration+byte1_durations[2]+byte1_durations[3]; // symbol distanse duration, default 1248 mks
 
             if(byte_3_duration > (MHI_T_S*8 + RMT_RX_DELTA) || byte_3_duration < (MHI_T_S-RMT_RX_DELTA) )
             {
-                ESP_LOGE(TAG,"ERROR: Symbol encoding duration out of range %d",byte_3_duration);
+                ESP_LOGE(TAG,"ERROR: Symbol encoding duration out of range %d idx %d",byte_3_duration,rmt_idx);
                 return ESP_FAIL;
             }
 /*            
@@ -207,7 +207,7 @@ static void mhi_rx_packet_task(void *p)
     }
 }
 
-static rmt_item64_t tx_items[(sizeof(((mhi_packet_t*)0)->raw_data))+1]; // rmt transmit buffer
+static rmt_item64_t tx_items[(sizeof(((mhi_packet_t*)0)->raw_data)*3)+1]; // rmt transmit buffer
 // encode mhi items to rmt items
 static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, const mhi_packet_t *data)
 {

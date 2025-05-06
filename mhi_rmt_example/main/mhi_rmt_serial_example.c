@@ -43,7 +43,7 @@ void app_main(void)
 {
     mhi_packet_t tx_packet =
     {
-        .packet_size = 16,
+        .packet_size = 31,
         .raw_data[0] = 0x00,
         .raw_data[1] = 0x00,
         .raw_data[2] = 0x23,
@@ -60,6 +60,7 @@ void app_main(void)
         .raw_data[13] = 0xfa,
         .raw_data[14] = 0xaf,
         .raw_data[15] = 0xff,
+        .raw_data[30] = 0xff,
     };
 
 #if DBG
@@ -104,7 +105,7 @@ void app_main(void)
             ESP_LOGE(TAG, "ERROR Packet size  tx %ld rx %ld ",tx_packet.packet_size, rx_packet.packet_size);
 
         }
-        for (int i = 0; i < sizeof(tx_packet.packet_size); i++)
+        for (int i = 0; i < tx_packet.packet_size; i++)
         {
             if (tx_packet.raw_data[i] != rx_packet.raw_data[i])
             {
