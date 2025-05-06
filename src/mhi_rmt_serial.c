@@ -39,8 +39,8 @@ static const char *TAG = "MHI_RMT";
 #define HBS_GLITCH 10       // software glith remove time ( 10 mks ) for bad line
 #define HBS_RMT_GLITCH  (3*1000)    // rmt glitch revove time ( 3 mks max )
 
-#define RX_BLOCK_SYMBOL (64*6)      // 6 rmt channel memory
-#define TX_BLOCK_SYMBOL (64*2)      // 2 rmt channel memory
+#define RX_BLOCK_SYMBOL (64*5)      // 5 rmt channel memory
+#define TX_BLOCK_SYMBOL (64*3)      // 3 rmt channel memory
 
 
 #define RMT_TX_DIV (80) // 8 // 1 mks
@@ -151,12 +151,13 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
         }
         rx_packet->raw_data[packet_idx] = (uint8_t) data & 0xff; // mhi_packet data 
         packet_idx++;
-        if(packet_idx > sizeof(mhi_packet_t))
+        if(packet_idx > sizeof(rx_packet->raw_data))
         {
             ESP_LOGE(TAG,"ERROR: Packet overflow");
             return ESP_FAIL;
         }
     }
+    rx_packet->packet_size = packet_idx;
     return ESP_OK;
 
 }
@@ -183,14 +184,20 @@ static void mhi_rx_packet_task(void *p)
     };
     while (1)
     {
+        memset(rx_items,0,sizeof(rx_items)); // clear rmt rx buffer
+        memset(&packet,0,sizeof(mhi_packet_t)); // clear packet rx buffer
         ESP_ERROR_CHECK(rmt_receive(rx_chan_handle, rx_items, sizeof(rx_items), &receive_config));
         if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
         if(rx_edata.num_symbols >= RX_BLOCK_SYMBOL-4)
             {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,RX_BLOCK_SYMBOL-4 ); continue;}
-        if(rx_edata.num_symbols != sizeof(mhi_packet_t)*3*2)
-            {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(mhi_packet_t)*3*2,rx_edata.num_symbols);}
-        if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
+
+            // This message is not relevant when the packet size is variable.
+/*
+            if(rx_edata.num_symbols != sizeof(packet.packet_size)*3*2)
+                {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(packet.packet_size)*3*2,rx_edata.num_symbols);}
+*/
+            if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
             {
                 if(xQueueSend(mhi_rx_packet_queue, &packet,0 /*5000/portTICK_PERIOD_MS*/) != pdPASS) { // wait time = 0 for debug
                     ESP_LOGE(TAG,"ERROR: mhi_rx_packet_queue full" );
@@ -200,13 +207,13 @@ static void mhi_rx_packet_task(void *p)
     }
 }
 
-static rmt_item64_t tx_items[(sizeof(mhi_packet_t)*3)+1]; // rmt transmit buffer
+static rmt_item64_t tx_items[(sizeof(((mhi_packet_t*)0)->raw_data))+1]; // rmt transmit buffer
 // encode mhi items to rmt items
 static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, const mhi_packet_t *data)
 {
     int i=0;
     uint8_t byte_3;
-    for(i=0;i<sizeof(mhi_packet_t);i++)
+    for(i=0;i< data->packet_size ;i++)
     {
         byte_3 = data->raw_data[i];
         for(int j=0;j<3;j++)
@@ -215,7 +222,7 @@ static void mhi_item_to_rmt_item_cvt(rmt_item64_t *rmt_data, const mhi_packet_t 
             byte_3 >>= 3;
         }
     }
-    rmt_data[sizeof(mhi_packet_t)*3].val = 0;
+    rmt_data[data->packet_size*3].val = 0;
 }
 // transmitter task
 static void mhi_tx_packet_task(void *p)
@@ -228,7 +235,7 @@ static void mhi_tx_packet_task(void *p)
     {
         xQueueReceive(mhi_tx_packet_queue, &packet, portMAX_DELAY);
         mhi_item_to_rmt_item_cvt(tx_items, &packet);
-        ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder_handle, (void*)tx_items, sizeof(tx_items), &rmt_tx_config));
+        ESP_ERROR_CHECK(rmt_transmit(tx_chan_handle, tx_encoder_handle, (void*)tx_items, sizeof(tx_items), &rmt_tx_config)); // change to packet_size ??
         rmt_tx_wait_all_done(tx_chan_handle, portMAX_DELAY);
         xEventGroupSetBits(mhi_tx_event_group, MHI_TX_DONE_BIT);
     }

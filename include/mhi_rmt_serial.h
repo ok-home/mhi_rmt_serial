@@ -2,6 +2,7 @@
 // mhi packet
 typedef struct
 {
+    uint32_t packet_size; // sizeof raw_data 16/29/??? tx -> out, rx->in
     union
     {
         struct
@@ -28,7 +29,7 @@ typedef struct
 
             uint8_t checksum;
         };
-        uint8_t raw_data[16]; // Equivalent unsigned value for the mhi item 
+        uint8_t raw_data[31]; // Equivalent unsigned value for the mhi item 3 channels max 32*3*2 = 192
     };
 } mhi_packet_t;
 

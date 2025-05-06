@@ -1,6 +1,6 @@
 # Simple exchange according to the MHI standard ( ESP32 )
   - The discussion of the protocol can be found at the link https://community.openhab.org/t/mitsubishi-heavy-x-y-line-protocol/82898
-  - MHI - 16 byte in frame
+  - MHI - 16/29 byte in frame (max - 31 byte)
   - MHI format according to doc/mhi.pdf
   - CRC in the driver is not calculated
 ## interface functions
@@ -15,6 +15,7 @@ void      mhi_clear_rx_queue(void);                         // clear rx buffer
 ```
 typedef struct
 {
+    uint32_t packet_size; // sizeof raw_data 16/29/??? tx -> out, rx->in
     union
     {
         struct
@@ -41,7 +42,7 @@ typedef struct
 
             uint8_t checksum;
         };
-        uint8_t raw_data[16]; // Equivalent unsigned value for the mhi item 
+        uint8_t raw_data[31]; // Equivalent unsigned value for the mhi item 
     };
 } mhi_packet_t;
 ```

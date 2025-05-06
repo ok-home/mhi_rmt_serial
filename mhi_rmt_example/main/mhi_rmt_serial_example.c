@@ -43,6 +43,7 @@ void app_main(void)
 {
     mhi_packet_t tx_packet =
     {
+        .packet_size = 16,
         .raw_data[0] = 0x00,
         .raw_data[1] = 0x00,
         .raw_data[2] = 0x23,
@@ -75,7 +76,7 @@ void app_main(void)
     // connect rx & tx pins without wires -> test only
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[RMT_TX_GPIO]);
 #if CONFIG_IDF_TARGET_ESP32
-    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN2_IDX, false);//esp32->RMT_SIG_IN2_IDX
+    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN3_IDX, false);//esp32->RMT_SIG_IN3_IDX
 #endif
 
 #endif
@@ -98,8 +99,12 @@ void app_main(void)
 #endif
 
 #if 1
+        if(rx_packet.packet_size != tx_packet.packet_size)
+        {
+            ESP_LOGE(TAG, "ERROR Packet size  tx %ld rx %ld ",tx_packet.packet_size, rx_packet.packet_size);
 
-        for (int i = 0; i < sizeof(tx_packet); i++)
+        }
+        for (int i = 0; i < sizeof(tx_packet.packet_size); i++)
         {
             if (tx_packet.raw_data[i] != rx_packet.raw_data[i])
             {
