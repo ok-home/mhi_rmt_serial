@@ -124,8 +124,9 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
             {
                 uint16_t filtered_duration = rmt_data[rmt_idx].duration;
                 rmt_idx++;
-                if (rmt_data[rmt_idx].duration < HBS_GLITCH ) // next symbol glitch -> attension filter only one glitch in pulse !!
+                if ((rmt_data[rmt_idx].duration < HBS_GLITCH) && (rmt_data[rmt_idx].duration != 0) ) // next symbol glitch or eof -> attension filter only one glitch in pulse !!
                 {
+                    //ESP_LOGI(TAG,"Glitch found in rx data %d %d",rmt_idx,rmt_data[rmt_idx].duration); //dbg only
                     filtered_duration = filtered_duration + rmt_data[rmt_idx].duration + rmt_data[rmt_idx+1].duration; // add glitch duration + next duration
                     rmt_idx += 2;
                 }
@@ -156,6 +157,7 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
             ESP_LOGE(TAG,"ERROR: Packet overflow");
             return ESP_FAIL;
         }
+        //ESP_LOGI(TAG,"rmtidx = %d packetidx = %d byte1_durations = %d %d %d %d",rmt_idx,packet_idx,byte1_durations[0],byte1_durations[1],byte1_durations[2],byte1_durations[3]); //dbg only
     }
     rx_packet->packet_size = packet_idx;
     return ESP_OK;
