@@ -1,4 +1,4 @@
-# Simple exchange according to the MHI standard ( ESP32 )
+# Simple exchange according to the MHI standard ( ESP32, ESP32S3, ESP32C3 )
   - The discussion of the protocol can be found at the link https://community.openhab.org/t/mitsubishi-heavy-x-y-line-protocol/82898
   - MHI - 16/29 byte in frame (max - 31 byte)
   - MHI format according to doc/mhi.pdf
