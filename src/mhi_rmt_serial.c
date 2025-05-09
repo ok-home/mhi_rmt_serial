@@ -39,9 +39,15 @@ static const char *TAG = "MHI_RMT";
 #define HBS_GLITCH 10       // software glith remove time ( 10 mks ) for bad line
 #define HBS_RMT_GLITCH  (3*1000)    // rmt glitch revove time ( 3 mks max )
 
-#define RX_BLOCK_SYMBOL (64*5)      // 5 rmt channel memory
-#define TX_BLOCK_SYMBOL (64*3)      // 3 rmt channel memory
-
+#ifdef CONFIG_IDF_TARGET_ESP32
+#define RX_BLOCK_SYMBOL (SOC_RMT_MEM_WORDS_PER_CHANNEL*7)      // 5 rmt channel memory
+#define TX_BLOCK_SYMBOL (SOC_RMT_MEM_WORDS_PER_CHANNEL*1)      // 1 rmt channel memory always ping/pong
+#define RMT_RX_BUFF_SIZE (RX_BLOCK_SYMBOL)                     //rmt_item32_t rx buff size
+#else // ESP32-S3 ESP32-C3 -> PINGPONG RX
+#define RX_BLOCK_SYMBOL (SOC_RMT_MEM_WORDS_PER_CHANNEL*1)      //  rmt channel memory
+#define TX_BLOCK_SYMBOL (SOC_RMT_MEM_WORDS_PER_CHANNEL*1)      // 1 rmt channel memory always ping/pong
+#define RMT_RX_BUFF_SIZE (sizeof(((mhi_packet_t*)0)->raw_data)*3*2*2) //rmt_item32_t rx buff size *2 with glitch detect
+#endif
 
 #define RMT_TX_DIV (80) // 8 // 1 mks
 #define RMT_TX_CLK_OUT (80 * 1000 * 1000 / RMT_TX_DIV) // 1 mks
@@ -163,7 +169,7 @@ static esp_err_t rmt_item_to_mhi_packet_cvt(mhi_packet_t *rx_packet, const rmt_r
     return ESP_OK;
 
 }
-static rmt_item16_t rx_items[RX_BLOCK_SYMBOL*2] = {0}; // max rx buffer for glith detection
+static rmt_item16_t rx_items[RMT_RX_BUFF_SIZE*2] = {0}; // max rx buffer for glith detection
 // rmt callback
 static bool IRAM_ATTR rmt_rx_done_callback(rmt_channel_handle_t channel, const rmt_rx_done_event_data_t *edata, void *user_data)
 {
@@ -182,7 +188,10 @@ static void mhi_rx_packet_task(void *p)
 
     rmt_receive_config_t receive_config = {
         .signal_range_min_ns = HBS_RMT_GLITCH,             // the shortest duration
-        .signal_range_max_ns = RMT_RX_IDLE_THRES * 1000 // the longest duration
+        .signal_range_max_ns = RMT_RX_IDLE_THRES * 1000, // the longest duration
+#if SOC_RMT_SUPPORT_RX_PINGPONG        
+        .flags.en_partial_rx = true,
+#endif
     };
     while (1)
     {
@@ -191,7 +200,7 @@ static void mhi_rx_packet_task(void *p)
         ESP_ERROR_CHECK(rmt_receive(rx_chan_handle, rx_items, sizeof(rx_items), &receive_config));
         if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
-        if(rx_edata.num_symbols >= RX_BLOCK_SYMBOL-4)
+        if(rx_edata.num_symbols >= RMT_RX_BUFF_SIZE-1)
             {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,RX_BLOCK_SYMBOL-4 ); continue;}
 
             // This message is not relevant when the packet size is variable.

@@ -33,6 +33,10 @@
 #define RMT_TX_GPIO (23)//esp32 ->(23)
 #define RMT_RX_GPIO (22)//esp32 ->(22)
 #define TX_TEST_GPIO (25)//for c3 !! esp32->(25)
+#else
+#define RMT_TX_GPIO (4)//esp32s2 ->(19)
+#define RMT_RX_GPIO (5)//esp32s2 ->(18)
+#define TX_TEST_GPIO (6)//esp32s2 ->(26)
 #endif
 
 static const char *TAG = "RMT TEST";
@@ -41,6 +45,7 @@ static const char *TAG = "RMT TEST";
 #include "logic_analyzer_ws_server.h"
 void app_main(void)
 {
+    
     mhi_packet_t tx_packet =
     {
         .packet_size = 31,
@@ -77,7 +82,9 @@ void app_main(void)
     // connect rx & tx pins without wires -> test only
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[RMT_TX_GPIO]);
 #if CONFIG_IDF_TARGET_ESP32
-    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN3_IDX, false);//esp32->RMT_SIG_IN3_IDX
+    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN1_IDX, false);//esp32->RMT_SIG_IN3_IDX
+#else
+    gpio_matrix_in(RMT_TX_GPIO, RMT_SIG_IN0_IDX, false);//esp32s3 esp32c3->RMT_SIG_IN0_IDX
 #endif
 
 #endif
