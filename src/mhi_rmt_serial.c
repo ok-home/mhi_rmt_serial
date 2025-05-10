@@ -201,12 +201,12 @@ static void mhi_rx_packet_task(void *p)
         if (xQueueReceive(receive_queue, &rx_edata, portMAX_DELAY) == pdTRUE)
         {
         if(rx_edata.num_symbols >= RMT_RX_BUFF_SIZE-1)
-            {ESP_LOGE(TAG,"ERROR: reseived symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,RX_BLOCK_SYMBOL-4 ); continue;}
+            {ESP_LOGE(TAG,"ERROR: Received symbols = %d greater then buff %d skip data!!",rx_edata.num_symbols,RX_BLOCK_SYMBOL-4 ); continue;}
 
             // This message is not relevant when the packet size is variable.
 /*
             if(rx_edata.num_symbols != sizeof(packet.packet_size)*3*2)
-                {ESP_LOGW(TAG,"Warning. Reseived symbols: expected=%d actual=%d, continue with glitch filter",sizeof(packet.packet_size)*3*2,rx_edata.num_symbols);}
+                {ESP_LOGW(TAG,"Warning. Received symbols: expected=%d actual=%d, continue with glitch filter",sizeof(packet.packet_size)*3*2,rx_edata.num_symbols);}
 */
             if (rmt_item_to_mhi_packet_cvt(&packet, &rx_edata) == ESP_OK)
             {
